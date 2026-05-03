@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Movement Library — Harrison's Stretch &amp; Mobility Reference</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0f0f0f;
+      --surface:    #1a1a1a;
+      --surface2:   #222222;
+      --border:     #2e2e2e;
+      --text:       #f0ede8;
+      --muted:      #7a7672;
+      --accent:     #e8a020;
+      --accent-dim: #6b4a0e;
+      --radius:     8px;
+      --ease:       300ms ease;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 2.25rem 1.5rem 1.75rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .site-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: clamp(2.6rem, 8vw, 4.5rem);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text);
+      line-height: 0.95;
+    }
+
+    .site-title .accent { color: var(--accent); }
+
+    .site-subtitle {
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 400;
+      margin-top: 0.55rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── FILTER BAR ── */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 1.5rem 1.5rem 0;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 0.45rem 1.05rem;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background var(--ease), border-color var(--ease), color var(--ease);
+      white-space: nowrap;
+    }
+
+    .pill:hover { border-color: var(--accent); color: var(--text); }
+
+    .pill.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #000;
+      font-weight: 600;
+    }
+
+    .pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* ── GRID ── */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 5rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.1rem;
+    }
+
+    @media (min-width: 600px)  { .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 960px)  { .grid { grid-template-columns: repeat(3, 1fr); } }
+
+    /* ── CARD WRAPPER (handles filter visibility) ── */
+    .card-wrap {
+      transition: opacity var(--ease);
+    }
+
+    .card-wrap.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .card-wrap.gone { display: none; }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: transform var(--ease), border-color var(--ease), box-shadow var(--ease);
+      overflow: hidden;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: #3a3a3a;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+    }
+
+    .card.open {
+      border-color: var(--accent-dim);
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* ── GIF AREA ── */
+    .gif-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: var(--surface2);
+      overflow: hidden;
+    }
+
+    .shimmer {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.035) 50%, transparent 80%);
+      background-size: 200% 100%;
+      animation: shimmer 1.8s infinite linear;
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .gif-wrap img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .gif-wrap img.loaded { opacity: 1; }
+
+    .fallback {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+    }
+
+    .fallback svg { width: 60px; height: 60px; opacity: 0.25; }
+
+    .giphy-tag {
+      position: absolute;
+      bottom: 7px;
+      right: 9px;
+      font-size: 0.58rem;
+      font-weight: 500;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      background: rgba(0,0,0,0.55);
+      padding: 2px 5px;
+      border-radius: 3px;
+      display: none;
+    }
+
+    /* ── CARD BODY ── */
+    .card-body { padding: 0.9rem 1.05rem 1rem; }
+
+    .card-num {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.2rem;
+    }
+
+    .card-name {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .card-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 0.65rem;
+    }
+
+    .badge {
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .chevron {
+      color: var(--muted);
+      font-size: 0.9rem;
+      transition: transform var(--ease), color var(--ease);
+      line-height: 1;
+    }
+
+    .card.open .chevron { transform: rotate(180deg); color: var(--accent); }
+
+    /* ── DETAIL PANEL ── */
+    .panel {
+      background: #131313;
+      border: 1px solid var(--accent-dim);
+      border-top: none;
+      border-bottom-left-radius: var(--radius);
+      border-bottom-right-radius: var(--radius);
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 380ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .panel.open { max-height: 700px; }
+
+    .panel-inner { padding: 1.3rem 1.3rem 1.6rem; }
+
+    .p-aka {
+      font-size: 0.75rem;
+      color: var(--accent);
+      font-style: italic;
+      letter-spacing: 0.03em;
+      margin-bottom: 0.8rem;
+    }
+
+    .p-hold {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: rgba(232,160,32,0.1);
+      border: 1px solid var(--accent-dim);
+      color: var(--accent);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.28rem 0.75rem;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+    }
+
+    .p-desc {
+      font-size: 0.875rem;
+      line-height: 1.75;
+      color: #bfbcb7;
+      margin-bottom: 1rem;
+    }
+
+    .p-tip {
+      border-left: 2px solid var(--accent);
+      padding-left: 0.85rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.65;
+      font-style: italic;
+    }
+
+    .p-tip::before {
+      content: 'Tip: ';
+      color: var(--accent);
+      font-style: normal;
+      font-weight: 600;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 2rem 1.5rem;
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    footer strong { color: var(--accent); font-weight: 500; }
+
+    /* ── REDUCED MOTION ── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1 class="site-title">Move<span class="accent">ment</span> Library</h1>
+  <p class="site-subtitle">Harrison's stretch &amp; mobility reference</p>
+</header>
+
+<nav class="filter-bar" aria-label="Filter movements by category">
+  <button class="pill active" data-filter="all">All</button>
+  <button class="pill" data-filter="Ground">Ground</button>
+  <button class="pill" data-filter="Standing">Standing</button>
+  <button class="pill" data-filter="Wall">Wall</button>
+  <button class="pill" data-filter="Shoulder">Shoulder</button>
+  <button class="pill" data-filter="Isometric">Isometric</button>
+</nav>
+
+<main>
+  <div class="grid" id="grid" role="list" aria-label="Movement cards"></div>
+</main>
+
+<footer>
+  <p>Built for daily use. <strong>Stay mobile.</strong></p>
+</footer>
+
+<script>
+/* ─────────────────────────────────────────────
+   DATA
+───────────────────────────────────────────── */
+const movements = [
+  {
+    id: 1,
+    name: "Cross-legged sitting",
+    aka: "Sukhasana / Easy pose",
+    category: "Ground",
+    hold: "Hold 1–2 min",
+    description: "Sit on the floor with shins crossed and each foot tucked under the opposite knee. Spine tall, hands resting on knees. Excellent baseline hip opener and foundation of most floor mobility work.",
+    tip: "Sit on a folded blanket or yoga block if your lower back rounds.",
+    gifQuery: "sukhasana easy pose stretch"
+  },
+  {
+    id: 2,
+    name: "Seiza",
+    aka: "Kneeling sit / Japanese sitting posture",
+    category: "Ground",
+    hold: "Hold 1–3 min",
+    description: "Kneel with knees together, sit back onto your heels, tops of feet flat on the floor. Spine upright. Common in martial arts and Japanese tradition. Stretches the ankles, feet, and quads passively.",
+    tip: "If ankles are tight, roll a towel and place it under them.",
+    gifQuery: "seiza kneeling pose stretch"
+  },
+  {
+    id: 3,
+    name: "Pigeon pose",
+    aka: "Eka Pada Rajakapotasana / Figure-4 stretch",
+    category: "Ground",
+    hold: "Hold 90 sec each side",
+    description: "From all-fours, bring one shin forward at an angle in front of you, extend the opposite leg straight back. Lower hips toward the floor. Deeply targets the piriformis, glute, and hip external rotators.",
+    tip: "Square your hips as much as possible and fold forward over the front shin to deepen.",
+    gifQuery: "pigeon pose hip stretch yoga"
+  },
+  {
+    id: 4,
+    name: "90/90 hip stretch",
+    aka: "Sitting 90/90 / Shin box",
+    category: "Ground",
+    hold: "Hold 60 sec each side",
+    description: "Sit with both legs bent to 90 degrees — front leg externally rotated, back leg internally rotated. Both knees and ankles at right angles. Trains both internal and external hip rotation simultaneously.",
+    tip: "Work active transitions between sides rather than just holding — this builds usable hip rotation.",
+    gifQuery: "90 90 hip stretch shin box"
+  },
+  {
+    id: 5,
+    name: "Deep squat",
+    aka: "Slavic squat / Third world squat / Malasana",
+    category: "Standing",
+    hold: "Hold 1–3 min",
+    description: "Feet shoulder-width or wider, toes slightly out. Lower into a full squat with hips below knees, heels on the floor. Hold with elbows pressing knees out. A fundamental human resting position.",
+    tip: "Elevate heels on a plate if you can't keep them flat. Work toward flat over time.",
+    gifQuery: "deep squat hold malasana stretch"
+  },
+  {
+    id: 6,
+    name: "Gorilla stretch",
+    aka: "Standing forward fold with hand tuck",
+    category: "Standing",
+    hold: "Hold 60–90 sec",
+    description: "Stand with feet hip-width, fold forward and slide your hands palm-up under your feet with fingers pointing toward heels. Bend knees slightly if needed. Decompresses the hamstrings and lower back.",
+    tip: "Straighten the legs gradually as you hold — don't force it on entry.",
+    gifQuery: "gorilla stretch forward fold hands under feet"
+  },
+  {
+    id: 7,
+    name: "Standing package stretch",
+    aka: "Standing forward fold with ankle hold",
+    category: "Standing",
+    hold: "Hold 60 sec",
+    description: "Standing forward fold where you wrap both hands around the backs of your ankles and pull your chest toward your shins. Creates a deep hamstring and spinal decompression stretch.",
+    tip: "Bend knees enough to get the grip, then slowly extend as flexibility allows.",
+    gifQuery: "standing forward fold ankle hold stretch"
+  },
+  {
+    id: 8,
+    name: "Horse stance",
+    aka: "Ma Bu / Sumo hold / Wide squat hold",
+    category: "Standing",
+    hold: "Hold 30–90 sec",
+    description: "Wide stance with feet 2–3x shoulder-width, toes pointing out 45 degrees. Lower until thighs are parallel to the floor. Hold upright with a flat back. Foundational martial arts strength and mobility hold.",
+    tip: "Push knees out in line with toes. Don't let them cave inward.",
+    gifQuery: "horse stance ma bu martial arts"
+  },
+  {
+    id: 9,
+    name: "Good morning stretch",
+    aka: "Standing hip hinge stretch",
+    category: "Standing",
+    hold: "Hold 45–60 sec",
+    description: "Feet hip-width, soft bend in knees. Hinge at the hips and reach hands toward the floor or toes. The key is the deliberate hip hinge — loading the hamstrings and glutes rather than just rounding the spine.",
+    tip: "Think about pushing your hips back behind you as you fold, not just folding down.",
+    gifQuery: "good morning hip hinge stretch hamstring"
+  },
+  {
+    id: 10,
+    name: "Hindu push-up",
+    aka: "Dand / Divebomber push-up",
+    category: "Standing",
+    hold: "8–12 reps",
+    description: "Start in downward dog. Swoop the chest forward and down close to the floor in an arc, then push up into upward dog. Reverse back. A continuous spinal wave combining shoulder mobility, chest opening, hip flexor stretch, and upper body strength.",
+    tip: "Lead with the chest on the way through — don't drop the hips first.",
+    gifQuery: "hindu push up divebomber dand"
+  },
+  {
+    id: 11,
+    name: "Wall elbow lat stretch",
+    aka: "Overhead lat wall stretch / Wall pec and armpit stretch",
+    category: "Wall",
+    hold: "Hold 60–90 sec",
+    description: "Place both elbows on a wall at shoulder height, forearms flat against the surface. Step back so your torso is angled. Keeping core and back engaged, let your chest sink toward the floor. Stretches triceps long head, lats, serratus anterior, and armpit area.",
+    tip: "Don't let the lower back arch — brace the core to keep the stretch in the right place.",
+    gifQuery: "wall elbow lat stretch armpit tricep"
+  },
+  {
+    id: 12,
+    name: "Half-kneeling thoracic rotation",
+    aka: "Half-kneeling open book / Kneeling world's greatest stretch",
+    category: "Wall",
+    hold: "10 reps each side",
+    description: "Lunge position with back knee on the floor, front foot against the wall with knee touching it. Take the outside arm and rotate it in a wide arc around your body, opening the chest and rotating through the thoracic spine. The wall pins the front leg so rotation is isolated to the upper back.",
+    tip: "Keep the front knee glued to the wall throughout — if it lifts, the rotation is coming from the wrong place.",
+    gifQuery: "half kneeling thoracic rotation open book wall"
+  },
+  {
+    id: 13,
+    name: "Self-resisted shoulder retraction",
+    aka: "Clasp and retract / Muscle control / Physical culture isometric",
+    category: "Isometric",
+    hold: "5 sec contractions, 8–10 reps",
+    description: "Hands clasped behind the back, shoulders rounded. Pull the arms backward and retract the shoulder blades — while deliberately resisting that motion by contracting the chest and front deltoids. Arms lower prioritises back contraction. Arms raised stretches chest and front shoulder more.",
+    tip: "Slow down the movement. The co-contraction is the work — speed kills the effect.",
+    gifQuery: "shoulder retraction isometric clasp behind back"
+  },
+  {
+    id: 14,
+    name: "Overhead active mobility drill",
+    aka: "Self-resisted lat depression / PNF overhead press",
+    category: "Shoulder",
+    hold: "5 sec contractions, 6–8 reps",
+    description: "Raise one arm overhead and press your palm up against your own opposing hand's resistance. Simultaneously pull the lat and shoulder blade down against that upward force. The self-created resistance activates end-range muscles and rapidly improves overhead mobility.",
+    tip: "Hold each contraction 3–5 seconds. Release, reach slightly further. Repeat.",
+    gifQuery: "overhead shoulder PNF active mobility drill"
+  },
+  {
+    id: 15,
+    name: "Rear support",
+    aka: "Reverse plank / Purvottanasana / Five Tibetan rite",
+    category: "Shoulder",
+    hold: "Hold 30–60 sec",
+    description: "Sit with legs extended, hands on the floor behind your hips, fingers pointing forward. Press through the hands and lift the hips until the body forms a straight line from shoulders to feet. Opens the chest, front of the shoulders, and hip flexors simultaneously.",
+    tip: "Squeeze glutes hard on the way up to protect the lower back and get full hip extension.",
+    gifQuery: "reverse plank purvottanasana rear support"
+  }
+];
+
+/* ─────────────────────────────────────────────
+   SVG FALLBACKS (one per category)
+───────────────────────────────────────────── */
+const FALLBACK = {
+  Ground: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="14" r="6" stroke="currentColor" stroke-width="2"/>
+    <line x1="40" y1="20" x2="40" y2="42" stroke="currentColor" stroke-width="2"/>
+    <line x1="40" y1="29" x2="26" y2="39" stroke="currentColor" stroke-width="2"/>
+    <line x1="40" y1="29" x2="54" y2="39" stroke="currentColor" stroke-width="2"/>
+    <path d="M26 44 Q33 56 40 52 Q47 56 54 44" stroke="currentColor" stroke-width="2" fill="none"/>
+    <line x1="26" y1="44" x2="16" y2="60" stroke="currentColor" stroke-width="2"/>
+    <line x1="54" y1="44" x2="64" y2="60" stroke="currentColor" stroke-width="2"/>
+    <line x1="16" y1="60" x2="64" y2="60" stroke="currentColor" stroke-width="1.5"/>
+  </svg>`,
+  Standing: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="10" r="6" stroke="currentColor" stroke-width="2"/>
+    <line x1="40" y1="16" x2="40" y2="46" stroke="currentColor" stroke-width="2"/>
+    <line x1="40" y1="26" x2="22" y2="36" stroke="currentColor" stroke-width="2"/>
+    <line x1="40" y1="26" x2="58" y2="36" stroke="currentColor" stroke-width="2"/>
+    <line x1="40" y1="46" x2="31" y2="66" stroke="currentColor" stroke-width="2"/>
+    <line x1="40" y1="46" x2="49" y2="66" stroke="currentColor" stroke-width="2"/>
+    <line x1="31" y1="66" x2="29" y2="74" stroke="currentColor" stroke-width="2"/>
+    <line x1="49" y1="66" x2="51" y2="74" stroke="currentColor" stroke-width="2"/>
+  </svg>`,
+  Wall: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <line x1="70" y1="6" x2="70" y2="74" stroke="currentColor" stroke-width="2.5"/>
+    <circle cx="36" cy="16" r="6" stroke="currentColor" stroke-width="2"/>
+    <line x1="36" y1="22" x2="36" y2="48" stroke="currentColor" stroke-width="2"/>
+    <line x1="36" y1="32" x2="70" y2="26" stroke="currentColor" stroke-width="2"/>
+    <line x1="36" y1="32" x2="18" y2="40" stroke="currentColor" stroke-width="2"/>
+    <line x1="36" y1="48" x2="26" y2="68" stroke="currentColor" stroke-width="2"/>
+    <line x1="36" y1="48" x2="46" y2="68" stroke="currentColor" stroke-width="2"/>
+  </svg>`,
+  Shoulder: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="12" r="6" stroke="currentColor" stroke-width="2"/>
+    <line x1="40" y1="18" x2="40" y2="46" stroke="currentColor" stroke-width="2"/>
+    <line x1="40" y1="27" x2="18" y2="18" stroke="currentColor" stroke-width="2"/>
+    <line x1="40" y1="27" x2="62" y2="18" stroke="currentColor" stroke-width="2"/>
+    <line x1="18" y1="18" x2="14" y2="32" stroke="currentColor" stroke-width="2"/>
+    <line x1="62" y1="18" x2="66" y2="32" stroke="currentColor" stroke-width="2"/>
+    <line x1="40" y1="46" x2="32" y2="66" stroke="currentColor" stroke-width="2"/>
+    <line x1="40" y1="46" x2="48" y2="66" stroke="currentColor" stroke-width="2"/>
+  </svg>`,
+  Isometric: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="40" cy="12" r="6" stroke="currentColor" stroke-width="2"/>
+    <line x1="40" y1="18" x2="40" y2="48" stroke="currentColor" stroke-width="2"/>
+    <path d="M20 40 L40 33 L60 40" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <line x1="20" y1="40" x2="14" y2="56" stroke="currentColor" stroke-width="2"/>
+    <line x1="60" y1="40" x2="66" y2="56" stroke="currentColor" stroke-width="2"/>
+    <line x1="40" y1="48" x2="32" y2="68" stroke="currentColor" stroke-width="2"/>
+    <line x1="40" y1="48" x2="48" y2="68" stroke="currentColor" stroke-width="2"/>
+  </svg>`
+};
+
+/* ─────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────── */
+const GIPHY_KEY = 'dc6zaTOxFJmzC';
+const gifCache  = {};   /* id → 'loaded' | 'failed' | 'pending' */
+let   openId    = null;
+
+/* ─────────────────────────────────────────────
+   BUILD GRID
+───────────────────────────────────────────── */
+const grid = document.getElementById('grid');
+
+movements.forEach(m => {
+  const wrap = document.createElement('div');
+  wrap.className = 'card-wrap';
+  wrap.dataset.category = m.category;
+  wrap.setAttribute('role', 'listitem');
+
+  wrap.innerHTML = `
+    <article
+      class="card"
+      id="card-${m.id}"
+      tabindex="0"
+      role="button"
+      aria-expanded="false"
+      aria-controls="panel-${m.id}"
+      aria-label="${m.name}, ${m.category}"
+    >
+      <div class="gif-wrap" id="gif-${m.id}" aria-hidden="true">
+        <div class="shimmer" id="shimmer-${m.id}"></div>
+        <div class="fallback">${FALLBACK[m.category] || FALLBACK.Standing}</div>
+        <img id="img-${m.id}" alt="${m.name} demonstration" />
+        <span class="giphy-tag" id="gtag-${m.id}">via Giphy</span>
+      </div>
+      <div class="card-body">
+        <div class="card-num">Movement ${String(m.id).padStart(2, '0')}</div>
+        <h2 class="card-name">${m.name}</h2>
+        <div class="card-foot">
+          <span class="badge">${m.category}</span>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </div>
+      </div>
+    </article>
+    <div
+      class="panel"
+      id="panel-${m.id}"
+      role="region"
+      aria-label="${m.name} detail"
+      aria-hidden="true"
+    >
+      <div class="panel-inner">
+        <p class="p-aka">${m.aka}</p>
+        <div class="p-hold">⏱ ${m.hold}</div>
+        <p class="p-desc">${m.description}</p>
+        <p class="p-tip">${m.tip}</p>
+      </div>
+    </div>
+  `;
+
+  grid.appendChild(wrap);
+
+  const card = wrap.querySelector('.card');
+  card.addEventListener('click', () => toggle(m.id));
+  card.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(m.id); }
+  });
+});
+
+/* ─────────────────────────────────────────────
+   TOGGLE / OPEN / CLOSE
+───────────────────────────────────────────── */
+function toggle(id) {
+  const card  = document.getElementById(`card-${id}`);
+  const panel = document.getElementById(`panel-${id}`);
+  const isOpen = card.classList.contains('open');
+
+  if (openId && openId !== id) closeCard(openId);
+
+  if (isOpen) {
+    closeCard(id);
+  } else {
+    card.classList.add('open');
+    card.setAttribute('aria-expanded', 'true');
+    panel.classList.add('open');
+    panel.setAttribute('aria-hidden', 'false');
+    openId = id;
+    fetchGif(id);
+  }
+}
+
+function closeCard(id) {
+  const card  = document.getElementById(`card-${id}`);
+  const panel = document.getElementById(`panel-${id}`);
+  if (!card) return;
+  card.classList.remove('open');
+  card.setAttribute('aria-expanded', 'false');
+  panel.classList.remove('open');
+  panel.setAttribute('aria-hidden', 'true');
+  if (openId === id) openId = null;
+}
+
+/* Close on outside tap (mobile UX) */
+document.addEventListener('click', e => {
+  if (openId && !e.target.closest('.card-wrap')) closeCard(openId);
+});
+
+/* ─────────────────────────────────────────────
+   GIPHY LOADER
+───────────────────────────────────────────── */
+async function fetchGif(id) {
+  if (gifCache[id]) return;
+  gifCache[id] = 'pending';
+
+  const m       = movements.find(x => x.id === id);
+  const img     = document.getElementById(`img-${id}`);
+  const shimmer = document.getElementById(`shimmer-${id}`);
+  const gtag    = document.getElementById(`gtag-${id}`);
+
+  try {
+    const endpoint = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(m.gifQuery)}&limit=1&rating=g`;
+    const res  = await fetch(endpoint);
+    const json = await res.json();
+
+    const gif = json.data && json.data[0];
+    if (!gif) throw new Error('no result');
+
+    const src = gif.images.downsized_medium?.url
+             || gif.images.fixed_height?.url
+             || gif.images.original?.url;
+
+    img.onload = () => {
+      img.classList.add('loaded');
+      shimmer.style.display = 'none';
+      gtag.style.display    = 'block';
+      gifCache[id] = 'loaded';
+    };
+    img.onerror = () => {
+      shimmer.style.display = 'none';
+      gifCache[id] = 'failed';
+    };
+    img.src = src;
+  } catch {
+    shimmer.style.display = 'none';
+    gifCache[id] = 'failed';
+  }
+}
+
+/* ─────────────────────────────────────────────
+   FILTER PILLS
+───────────────────────────────────────────── */
+document.querySelectorAll('.pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    if (openId) closeCard(openId);
+
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+
+    const filter = pill.dataset.filter;
+
+    document.querySelectorAll('.card-wrap').forEach(wrap => {
+      const match = filter === 'all' || wrap.dataset.category === filter;
+
+      if (match) {
+        wrap.classList.remove('hide', 'gone');
+      } else {
+        wrap.classList.add('hide');
+        setTimeout(() => {
+          if (wrap.classList.contains('hide')) wrap.classList.add('gone');
+        }, 320);
+      }
+    });
+  });
+});
+</script>
+</body>
+</html>
